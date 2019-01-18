@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import numpy as np
 from pyteomics import mzxml
+from pyteomics import mzml
 import pandas as pd
 import copy
 import os
@@ -35,14 +36,26 @@ def average_ms1(input_filename, output_filename=None, bin_width=1.0, format="csv
     mass_list = []
     intensity_list = []
 
-    spectra = mzxml.read(input_filename, read_schema = True) #type is pyteomics mzxml
+    filename, file_extension = os.path.splitext(input_filename)
+
+    if file_extension == ".mzXML":
+        spectra = mzxml.read(input_filename, read_schema = True) #type is pyteomics mzxml
+    if file_extension == ".mzML":
+        spectra = mzml.read(input_filename, read_schema = True) #type is pyteomics mzxml
 
     peaks_list = []
 
     for element in spectra:
+        if "msLevel" in element:
+            mslevel = element["msLevel"]
+        if "ms level" in element:
+            mslevel = element["ms level"]
+
         mlist = copy.deepcopy(element['m/z array'])
         inten = copy.deepcopy(element ['intensity array'])
-        mslevel = element["msLevel"]
+
+
+
         if mslevel != 2:
             continue
 
