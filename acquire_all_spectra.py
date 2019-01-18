@@ -10,6 +10,7 @@ import multiprocessing
 import subprocess
 import os
 import json
+from random import shuffle
 
 
 #Wraps the parallel job running, simplifying code
@@ -24,21 +25,28 @@ def run_parallel_job(input_function, input_parameters_list, parallelism_level):
         results = Parallel(n_jobs = parallelism_level)(delayed(input_function)(input_object) for input_object in input_parameters_list)
         return results
 
-def process(param, execution="remote"):
+def process(param, execution="massive"):
     filename = param[0]
     output_folder = param[1]
 
+    file_path = ""
+
     if execution == "massive":
         massive_path = "/data/massive/%s" % (filename[2:])
-        norm_vector = ms1_averaging.average_ms1(massive_path)
+        file_path = massive_path
     else:
         ftp_filename = "ftp://massive.ucsd.edu/%s" % (filename[2:])
         print(ftp_filename)
         local_filename = os.path.join(output_folder, os.path.basename(filename))
         cmd = "wget '%s' -O %s" % (ftp_filename, local_filename)
         os.system(cmd)
-        norm_vector = ms1_averaging.average_ms1(local_filename)
+        file_path = local_filename
 
+    try:
+        norm_vector = ms1_averaging.average_ms1(file_path)
+    except:
+        print("Error")
+        return None
 
     output_dict = {}
     output_dict["vector"] = norm_vector.tolist()
@@ -62,8 +70,8 @@ def main():
             all_filename.append(filename)
 
     parameters = [(param, output_folder) for param in all_filename]
-
-    all_spectra_output = run_parallel_job(process, parameters[:2], 1)
+    shuffle(parameters)
+    all_spectra_output = run_parallel_job(process, parameters[:500], 80)
 
 
     json.dump(all_spectra_output, open(output_json_filename, "w"))
