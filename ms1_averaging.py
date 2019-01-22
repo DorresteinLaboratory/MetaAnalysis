@@ -57,9 +57,7 @@ def average_ms1(input_filename, output_filename=None, bin_width=1.0, format="csv
 
 
         if mslevel != 2:
-            continue
-
-        peaks_list += zip(mlist, inten)
+            peaks_list += zip(mlist, inten)
 
     numpy_vector = vectorize_peaks(peaks_list, 2000, bin_width)
 
